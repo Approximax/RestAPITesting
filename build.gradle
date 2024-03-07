@@ -1,0 +1,29 @@
+plugins {
+    id("java")
+}
+
+group = "org.example"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+}
+compileTestJava {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    testImplementation(
+            'io.rest-assured:rest-assured:5.4.0',
+            'org.junit.jupiter:junit-jupiter:5.10.2',
+            'io.rest-assured:json-schema-validator:5.4.0'
+    )
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
