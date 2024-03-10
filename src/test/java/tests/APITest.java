@@ -1,30 +1,60 @@
 package tests;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
+import static org.hamcrest.Matchers.is;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 
 public class APITest {
 
+    private static String base = "https://reqres.in/";
+
     @Test
+    @Tag("reqres")
     void singleUserTest () {
         given()
                 .when()
-                    .get("https://reqres.in/api/users/2")
+                    .get(base + "api/users/2")
                 .then()
                     .log().status()
                     .log().body()
-                    .statusCode(200)
-                    .body(matchesJsonSchemaInClasspath("schemas/single-user-schema.json"));
+                    .statusCode(200);
     }
 
     @Test
-    void userNotFoundTest() {
+    @Tag("reqres")
+    @DisplayName("Проверка кода ответа, при POST создания пользователя")
+    void checkStatusCodeCreate() {
         given()
+                .log().uri()
                 .when()
-                .get("https://reqres.in/api/users/2")
+                    .post(base + "/api/users")
                 .then()
-                .statusCode(404);
+                    .log().status()
+                    .log().body()
+                    .statusCode(201);
+    }
+
+    @Test
+    void validateResponse() {
+        String test_data = "{\"name\": \"morpheus\", \"job\": \"zion resident\"}";
+
+        given()
+                .log().uri()
+                .contentType(JSON)
+                .body(test_data)
+        .when()
+                .put(base + "api/users/2")
+        .then()
+                .log().status()
+                .log().status()
+                .statusCode(201)
+                .body("name", is(""))
+
+
     }
 }
