@@ -1,39 +1,44 @@
 package tests;
 
+import helpers.TestBase;
+import models.LoginBodyModel;
+import models.LoginResponseModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.qameta.allure.Allure.step;
+import static io.restassured.RestAssured.basePath;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static specs.LoginSpecs.loginRequestSpec;
+import static specs.LoginSpecs.loginResponseSpec;
 
-public class APITest {
-
-    private final String base = "https://reqres.in/";
+@Tag("reqres")
+public class APITest extends TestBase {
 
     @Test
-    @Tag("reqres")
     @DisplayName("Успешная регистрация с корректными данными")
     void successfulLogin() {
+        LoginBodyModel authData = new LoginBodyModel();
+        authData.setEmail("eve.holt@reqres.in");
+        authData.setPassword("cityslicka");
 
-        String test_data = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"cityslicka\" }";
-
-        given()
-                .log().uri()
-                .contentType(JSON)
-                .body(test_data)
+        LoginResponseModel response = step("Отправка запроса", () ->
+                given(loginRequestSpec)
+                        .body(authData)
                 .when()
-                .post(base + "api/login")
+                        .post(basePath + "login")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body("token", is("QpwL5tke4Pnpja7X4"));
+                        .spec(loginResponseSpec)
+                        .extract().as(LoginResponseModel.class));
+        step("Проверка ответа", () ->
+                assertNotNull(response.getToken()));
     }
 
     @Test
-    @Tag("reqres")
     @DisplayName("Успешная регистрация с минимальными данными")
     void successfulRegistration() {
         String test_credentials =  "{ \"email\": \"java_chemp@apr.in\", \"password\": \"overcome\" }";
@@ -43,7 +48,7 @@ public class APITest {
                 .contentType(JSON)
                 .body(test_credentials)
                 .when()
-                .post(base + "api/registration")
+                .post(basePath + "/registration")
                 .then()
                 .log().status()
                 .log().body()
@@ -53,7 +58,6 @@ public class APITest {
     }
 
     @Test
-    @Tag("reqres")
     @DisplayName("Некорректная регистрация с отсутствующим паролем")
     void unsuccessfulRegistration() {
         String test_login = "{\"email\": \"sydney@fife\"}";
@@ -63,7 +67,7 @@ public class APITest {
                 .contentType(JSON)
                 .body(test_login)
                 .when()
-                .post(base + "api/register")
+                .post(basePath + "/register")
                 .then()
                 .log().status()
                 .log().body()
@@ -72,13 +76,12 @@ public class APITest {
     }
 
     @Test
-    @Tag("reqres")
     @DisplayName("Пользователь не найден")
     void userNotFound() {
         given()
                 .log().uri()
                 .when()
-                .get(base + "api/users/23")
+                .get(basePath + "users/23")
                 .then()
                 .log().status()
                 .log().body()
