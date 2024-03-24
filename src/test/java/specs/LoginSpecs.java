@@ -19,7 +19,6 @@ public class LoginSpecs {
             .contentType(ContentType.JSON);
 
     public static ResponseSpecification loginResponseSpec = new ResponseSpecBuilder()
-            .expectStatusCode(201)
             .log(LogDetail.STATUS)
             .log(LogDetail.BODY)
             .build();

@@ -8,83 +8,84 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.basePath;
 import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static specs.LoginSpecs.loginRequestSpec;
-import static specs.LoginSpecs.loginResponseSpec;
+import static specs.LoginSpecs.*;
 
 @Tag("reqres")
 public class APITest extends TestBase {
 
     @Test
-    @DisplayName("Успешная регистрация с корректными данными")
+    @DisplayName("Успешная авторизация")
     void successfulLogin() {
-        LoginBodyModel authData = new LoginBodyModel();
-        authData.setEmail("eve.holt@reqres.in");
-        authData.setPassword("cityslicka");
+        LoginBodyModel testData = new LoginBodyModel();
+        testData.setEmail("eve.holt@reqres.in");
+        testData.setPassword("cityslicka");
 
-        LoginResponseModel response = step("Отправка запроса", () ->
+        LoginResponseModel response = step("Отправка запроса на авторизацию", () ->
                 given(loginRequestSpec)
-                        .body(authData)
+                        .body(testData)
                 .when()
-                        .post(basePath + "login")
+                        .post("/login")
                 .then()
+                        .statusCode(200)
                         .spec(loginResponseSpec)
                         .extract().as(LoginResponseModel.class));
-        step("Проверка ответа", () ->
+        step("Проверка наличия токена", () ->
                 assertNotNull(response.getToken()));
     }
 
     @Test
-    @DisplayName("Успешная регистрация с минимальными данными")
+    @DisplayName("Успешная регистрация")
     void successfulRegistration() {
-        String test_credentials =  "{ \"email\": \"java_chemp@apr.in\", \"password\": \"overcome\" }";
+        LoginBodyModel testData = new LoginBodyModel();
+        testData.setEmail("java_chemp@apr.in");
+        testData.setPassword("overcome");
 
-        given()
-                .log().uri()
-                .contentType(JSON)
-                .body(test_credentials)
-                .when()
-                .post(basePath + "/registration")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
-                .body("email", is("java_chemp@apr.in"),
-                        "password", is("overcome"));
+        LoginResponseModel responseModel = step("Отправка данных на регистрацию пользователя", () ->
+                given(loginRequestSpec)
+                        .body(testData)
+                        .when()
+                        .post("/register")
+                        .then()
+                        .statusCode(200)
+                        .spec(loginResponseSpec)
+                        .extract().as(LoginResponseModel.class));
+
+        step("Проверка наличия токена", () ->
+                assertNotNull(responseModel.getToken()));
     }
 
     @Test
-    @DisplayName("Некорректная регистрация с отсутствующим паролем")
+    @DisplayName("Регистрация без пароля")
     void unsuccessfulRegistration() {
-        String test_login = "{\"email\": \"sydney@fife\"}";
+        LoginBodyModel testData = new LoginBodyModel();
+        testData.setEmail("sydney@fife");
 
-        given()
-                .log().uri()
-                .contentType(JSON)
-                .body(test_login)
-                .when()
-                .post(basePath + "/register")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(400)
-                .body("error", is("Missing password"));
+        LoginResponseModel responseModel = step("Регистрация пользователя", () ->
+                given(loginRequestSpec)
+                        .body(testData)
+                        .when()
+                        .post("/register")
+                        .then()
+                        .statusCode(400)
+                        .spec(loginResponseSpec)
+                        .extract().as(LoginResponseModel.class));
+
+        step("Проверка, что в отете пришла ошибка", () ->
+                assertEquals("Missing password", responseModel.getError()));
     }
 
     @Test
     @DisplayName("Пользователь не найден")
     void userNotFound() {
-        given()
-                .log().uri()
-                .when()
-                .get(basePath + "users/23")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(404);
+        step("Отправка битого запроса с проверкой статуса ответа", () ->
+                given(loginRequestSpec)
+                        .when()
+                        .post("/unknown/23")
+                        .then()
+                        .statusCode(404)
+                        .spec(loginResponseSpec));
     }
 }
