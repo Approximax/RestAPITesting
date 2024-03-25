@@ -11,10 +11,11 @@ import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static specs.LoginSpecs.*;
+import static specs.LoginSpecs.loginRequestSpec;
+import static specs.LoginSpecs.loginResponseSpec;
 
 @Tag("reqres")
-public class APITest extends TestBase {
+public class ApiTest extends TestBase {
 
     @Test
     @DisplayName("Успешная авторизация")
@@ -26,9 +27,9 @@ public class APITest extends TestBase {
         LoginResponseModel response = step("Отправка запроса на авторизацию", () ->
                 given(loginRequestSpec)
                         .body(testData)
-                .when()
+                        .when()
                         .post("/login")
-                .then()
+                        .then()
                         .statusCode(200)
                         .spec(loginResponseSpec)
                         .extract().as(LoginResponseModel.class));
@@ -40,8 +41,8 @@ public class APITest extends TestBase {
     @DisplayName("Успешная регистрация")
     void successfulRegistration() {
         LoginBodyModel testData = new LoginBodyModel();
-        testData.setEmail("java_chemp@apr.in");
-        testData.setPassword("overcome");
+        testData.setEmail("eve.holt@reqres.in");
+        testData.setPassword("pistol");
 
         LoginResponseModel responseModel = step("Отправка данных на регистрацию пользователя", () ->
                 given(loginRequestSpec)
@@ -83,7 +84,7 @@ public class APITest extends TestBase {
         step("Отправка битого запроса с проверкой статуса ответа", () ->
                 given(loginRequestSpec)
                         .when()
-                        .post("/unknown/23")
+                        .get("/unknown/23")
                         .then()
                         .statusCode(404)
                         .spec(loginResponseSpec));
