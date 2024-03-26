@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LoginResponseModel {
-    String token, error;
+    String token, error, id;
 }

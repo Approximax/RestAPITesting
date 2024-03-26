@@ -1,8 +1,8 @@
 package tests;
 
-import helpers.TestBase;
 import models.LoginBodyModel;
 import models.LoginResponseModel;
+import models.UserDataModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -88,5 +88,21 @@ public class ApiTest extends TestBase {
                         .then()
                         .statusCode(404)
                         .spec(loginResponseSpec));
+    }
+
+    @Test
+    @DisplayName("Проверка id пользователя")
+    void singleUserId() {
+        UserDataModel userDataModel = step("Отправка запроса на получение данных пользователя", () ->
+                given(loginRequestSpec)
+                        .when()
+                        .get("/users/2")
+                        .then()
+                        .statusCode(200)
+                        .spec(loginResponseSpec)
+                        .extract().as(UserDataModel.class));
+
+        step("Проверка соответствия id пользователя запрашиваемому", () ->
+                assertEquals(2, userDataModel.getData().getId()));
     }
 }
